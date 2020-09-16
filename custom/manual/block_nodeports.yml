@@ -1,0 +1,72 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nginx-nodeport
+  labels:
+    app: nginx-nodeport
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-nodeport
+  template:
+    metadata:
+      labels:
+        app: nginx-nodeport
+    spec:
+      securityContext:
+        # privileged: false
+        # allowPrivilegeEscalation: false  
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000      
+      containers:
+      - name: nginx-nodeport
+        image: k8s.gcr.io/pause
+        # imagePullPolicy: Always
+        securityContext:
+          privileged: true
+          allowPrivilegeEscalation: true
+          # runAsUser: 1000
+          # runAsGroup: 1000
+          # fsGroup: 1000      
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            cpu: 100m
+            memory: 50Mi
+        # ports:
+        # - containerPort: 8080
+        # - containerPort: 8443
+        # Deny by PSP: hostPort
+        # hostPort: 8086
+        # securityContext:
+        #   # runAsRoot: true
+        #   # runAsNonRoot: true
+        #   runAsUser: 1000
+        #   runAsGroup: 3000
+        #   # Deny by PSP: hostNetwork
+        #   # hostNetwork: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport
+  labels:
+    app: nginx-nodeport
+spec:
+  ports:
+  - name: web
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: secure
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: nginx-nodeport
+---
